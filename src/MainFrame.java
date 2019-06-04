@@ -13,9 +13,9 @@ import java.awt.event.ActionListener;
 public class MainFrame extends JFrame {
     static JFrame mainframe;
     static JLabel usernameuserlabel, passworduserlabel, nameuserlabel, cnicuserlabel, phonenumberuserlabel, usernameloginuserlabel, passwordloginuserlabel,
-            Registerdummy;
+            Registerdummy,emailuserlabel;
     static JTextField usernameusertextfield,
-            nameusertextfield, cnicusertextfield, phonenumberusertextfield, usernameloginusertextfield;
+            nameusertextfield, cnicusertextfield, phonenumberusertextfield,emailusertextfied, usernameloginusertextfield;
     static JPasswordField passwordloginusertextfield, passwordusertextfield;
     static JButton RegisterButton, LoginButton;
     static JButton Administratorlogin, AgentLogin;
@@ -30,7 +30,7 @@ public class MainFrame extends JFrame {
         mainframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         mainframe.setExtendedState(JFrame.MAXIMIZED_BOTH);
         mainframe.setLayout(new BorderLayout());
-        mainframe.setContentPane(new JLabel(new ImageIcon("5100222.png")));
+        mainframe.setContentPane(new JLabel(new ImageIcon("510022.jpg")));
         mainframe.getContentPane().setLayout(null);
 
     }
@@ -50,16 +50,21 @@ public class MainFrame extends JFrame {
         cnicuserlabel = new JLabel("CNIC");
         cnicuserlabel.setBounds(1100, 190, 100, 100);
         mainframe.add(cnicuserlabel);
+
+        emailuserlabel= new JLabel("Email");
+        emailuserlabel.setBounds(1100,240,100,100);
+        mainframe.add(emailuserlabel);
+
         phonenumberuserlabel = new JLabel("Phone No");
-        phonenumberuserlabel.setBounds(1100, 240, 100, 100);
+        phonenumberuserlabel.setBounds(1100, 290, 100, 100);
         mainframe.add(phonenumberuserlabel);
 
         //Main Login
         usernameuserlabel = new JLabel("Username");
-        usernameuserlabel.setBounds(1100, 290, 100, 100);
+        usernameuserlabel.setBounds(1100, 340, 100, 100);
         mainframe.add(usernameuserlabel);
         passworduserlabel = new JLabel("Password");
-        passworduserlabel.setBounds(1100, 340, 100, 100);
+        passworduserlabel.setBounds(1100, 390, 100, 100);
         mainframe.add(passworduserlabel);
         //////////////////////////////////////////////////////////
         //TextField for Person
@@ -71,22 +76,25 @@ public class MainFrame extends JFrame {
         cnicusertextfield.setBounds(1180, 225, 300, 30);
         mainframe.add(cnicusertextfield);
 
+        emailusertextfied= new RoundJTextfield("Enter Email");
+        emailusertextfied.setBounds(1180,275,300,30);
+        mainframe.add(emailusertextfied);
 
         phonenumberusertextfield = new RoundJTextfield("Enter Phonenumber");
-        phonenumberusertextfield.setBounds(1180, 275, 300, 30);
+        phonenumberusertextfield.setBounds(1180, 325, 300, 30);
         mainframe.add(phonenumberusertextfield);
 
         //Textfield for user
         usernameusertextfield = new RoundJTextfield("Enter Username");
-        usernameusertextfield.setBounds(1180, 325, 300, 30);
+        usernameusertextfield.setBounds(1180, 375, 300, 30);
         mainframe.add(usernameusertextfield);
         passwordusertextfield = new RountJPasswordField("Enter Password");
-        passwordusertextfield.setBounds(1180, 375, 300, 30);
+        passwordusertextfield.setBounds(1180, 425, 300, 30);
         mainframe.add(passwordusertextfield);
 
         ///Register Button
         RegisterButton = new JButton("Sign Up");
-        RegisterButton.setBounds(1180, 440, 200, 35);
+        RegisterButton.setBounds(1180, 505, 200, 35);
         RegisterButton.setIcon(new ImageIcon("RegisterButtonmain.png"));
         RegisterButton.setBorder(null);
         RegisterButton.setBorderPainted(false);
@@ -145,7 +153,7 @@ public class MainFrame extends JFrame {
 
     public static void BottomDisplay() {
         Administratorlogin = new JButton("Administrator Login");
-        Administratorlogin.setBounds(1100, 510, 250, 80);
+        Administratorlogin.setBounds(1100, 575, 250, 80);
         Administratorlogin.setIcon(new ImageIcon("Adminloginmain1.png"));
         Administratorlogin.setBorder(null);
         Administratorlogin.setBorderPainted(false);
@@ -164,7 +172,7 @@ public class MainFrame extends JFrame {
         });
 
         AgentLogin = new JButton("Agent Login");
-        AgentLogin.setBounds(1300, 510, 250, 80);
+        AgentLogin.setBounds(1300, 575, 250, 80);
         AgentLogin.setIcon(new ImageIcon("AgentLoginmain1.png"));
         AgentLogin.setBorder(null);
         AgentLogin.setBorderPainted(false);

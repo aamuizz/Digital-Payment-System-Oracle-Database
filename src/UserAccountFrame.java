@@ -2,10 +2,12 @@ import javafx.scene.layout.BackgroundImage;
 import jdk.nashorn.internal.scripts.JO;
 
 import javax.swing.*;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -21,8 +23,9 @@ public class UserAccountFrame {
     static JButton sendmoneybutton, Paybutton, Paybutton1, paybuttoninternet, creditbutton,
             logoutbutton;
     static TextArea transactionhistory;
+    static Connection connection;
 
-    public static void FrontUserDisplay(User loggineduser) {
+    public static void FrontUserDisplay(User loggineduser) throws SQLException {
         MainFrame.mainframe.setVisible(false);
         JFrame userframe = new JFrame("My Account");
         userframe.getContentPane().setLayout(new GridLayout());
@@ -82,7 +85,8 @@ public class UserAccountFrame {
         transactionlabel.setBounds(5, 280, 1200, 80);
         transactionlabel.setFont(new Font("Arial", Font.BOLD, 22));
         transactionhistory = new TextArea();
-        transactionhistory.setText(loggineduser.getTransactionhistory());
+        transactionhistoryupdate(loggineduser);
+
         transactionhistory.setFont(new Font("Arial", Font.ITALIC, 20));
         transactionhistory.setEditable(false);
         transactionhistory.setBounds(0, 350, 1600, 450);
@@ -108,7 +112,9 @@ public class UserAccountFrame {
         logoutbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                userframe.setVisible(false);
+                MainFrame.mainframe.setVisible(true);
+
             }
         });
 
@@ -156,7 +162,7 @@ public class UserAccountFrame {
         sendmoneybutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                sendmoneyuser(loggineduser);
             }
 
         });
@@ -170,7 +176,6 @@ public class UserAccountFrame {
         consumernolabel.setFont(mainfont);
         consumernofield = new RoundJTextfield("Consumer Number here");
         consumernofield.setBounds(155, 35, 300, 30);
-
         Paybutton = new JButton("Pay");
         Paybutton.setBounds(20, 60, 150, 100);
         Paybutton.setIcon(new ImageIcon("paybutton1.png"));
@@ -250,29 +255,138 @@ public class UserAccountFrame {
         jTabbedPane.add("Internet Bill Payment", internetbill);
         userframe.setVisible(true);
         Paybutton.addActionListener(e -> {
-            // Code will come here #########################################
+            if(Checkings.isNumeric(consumernofield.getText())) {
+                try {
+                    payutilitybills("Electricity",loggineduser);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            else{
+                JOptionPane.showMessageDialog(null,"Something Wrong Please Try Again");
+            }
         });
         Paybutton1.addActionListener(e -> {
-            // Code will come here #########################################
+            if(Checkings.isNumeric(consumernofield1.getText())) {
+                try {
+                    payutilitybills("Gas",loggineduser);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            else{
+                JOptionPane.showMessageDialog(null,"Something Wrong Please Try Again");
+            }
         });
         paybuttoninternet.addActionListener(e -> {
-            // Code will come here #########################################
+            if(Checkings.isNumeric(customernofield.getText())) {
+                try {
+                    payutilitybills(internetbox.getSelectedItem().toString(),loggineduser);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            else{
+                JOptionPane.showMessageDialog(null,"Something Wrong Please Try Again");
+            }
         });
         depositmoneypanel(jTabbedPane, loggineduser);
+        queriespanel(jTabbedPane,loggineduser);
+    }
+    public static void payutilitybills(String billtype, User user) throws SQLException {
+        int dialogbutton = JOptionPane.YES_NO_OPTION;
+        int range = (2000 - 1000) + 1;
+        int randombill = (int) (Math.random() * range) + 100;
+        int dialogresult = JOptionPane.showConfirmDialog(null, "Your total bill for the " + billtype + " is " + randombill + "\n" +
+                "Are you Sure You want to Pay?", "Bill Payment", dialogbutton);
+        if (dialogresult == 0) {
+            if (user.getWalletmoney()>=randombill) {
+                connection = DriverManager.getConnection("jdbc:oracle:thin:@//localhost:1521/pdborcl", "hr", "hr");
+                user.setWalletmoney(user.getWalletmoney()-randombill);
+                totalbalancelabel.setText(" Balance: " + user.getWalletmoney() + " PKR");
+                String query3 ="insert into utilitybill (billno, customerid, amount, billtype, username) values \n" +
+                        "  (seq_utilitybill.nextval,?,?,?,?)";
+                PreparedStatement preparedStatement2 = connection.prepareStatement(query3);
+                if(billtype.contains("Electricity")){
+                   preparedStatement2.setString(1,consumernofield.getText());
+                }
+                else if(billtype.contains("Gas")){
+                    preparedStatement2.setString(1,consumernofield1.getText());
+                }
+                else{
+                    preparedStatement2.setString(1,customernofield.getText());
+                }
+                consumernofield.setText("");
+                consumernofield1.setText("");
+                customernofield.setText("");
+                preparedStatement2.setInt(2,randombill);
+                preparedStatement2.setString(3,billtype);
+                preparedStatement2.setString(4,user.getUsername());
+                preparedStatement2.execute();
+                preparedStatement2.close();
+                JOptionPane.showMessageDialog(null, "Bill Paid");
+                transactionhistoryupdate(user);
+                connection.close();
+
+            } else {
+                JOptionPane.showMessageDialog(null, "You don't have enough money in your account");
+            }
+        }
     }
 
-    public static void sendmoneymain(String username, double amount, String senderusername) {
-        // Code will come here #########################################
+    public static void sendmoneyuser(User loggineduser){
+        if(loggineduser.getWalletmoney()>=Integer.parseInt(amountsendmoneyfield.getText().toString())&&Integer.parseInt(amountsendmoneyfield.getText())>0){
+            int dialogbutton = JOptionPane.YES_NO_OPTION;
+            int dialogresult = JOptionPane.showConfirmDialog(null, "Are you sure you want" +
+                    " to send money to " + usernamesendmoneyfield.getText(), "Confirmation", dialogbutton);
+            if (dialogresult == 0) {
+                try {
+                    DataBase dataBase = new DataBase();
+                    if(dataBase.isMemberExist(usernamesendmoneyfield.getText())) {
+
+                        connection = DriverManager.getConnection("jdbc:oracle:thin:@//localhost:1521/pdborcl", "hr", "hr");
+                        String query = "Update MEMBER set walletmoney=? where username =?";
+                        PreparedStatement preparedStatement = connection.prepareStatement(query);
+                        preparedStatement.setInt(1, (int) loggineduser.getWalletmoney() - Integer.parseInt(amountsendmoneyfield.getText().toString()));
+                        preparedStatement.setString(2, loggineduser.getUsername());
+                        preparedStatement.execute();
+                        preparedStatement.close();
+                        String query2 = "Update MEMBER set walletmoney=walletmoney+? where username =?";
+                        PreparedStatement preparedStatement1 = connection.prepareStatement(query2);
+                        preparedStatement1.setInt(1, Integer.parseInt(amountsendmoneyfield.getText()));
+                        preparedStatement1.setString(2, usernamesendmoneyfield.getText());
+                        preparedStatement1.execute();
+                        preparedStatement1.close();
+                        loggineduser.setWalletmoney(loggineduser.getWalletmoney() - Integer.parseInt(amountsendmoneyfield.getText().toString()));
+                        totalbalancelabel.setText(" Balance: " + loggineduser.getWalletmoney() + " PKR");
+                        String query3 = "insert into transaction(transactionid, senderusername, receiverusername, DATEANDTIME,Amount) VALUES (seq_transid.nextval,?,?,SYSDATE,?)";
+                        PreparedStatement preparedStatement2 = connection.prepareStatement(query3);
+                        preparedStatement2.setString(1, loggineduser.getUsername());
+                        preparedStatement2.setString(2, usernamesendmoneyfield.getText());
+                        preparedStatement2.setInt(3, Integer.parseInt(amountsendmoneyfield.getText()));
+                        preparedStatement2.execute();
+                        preparedStatement2.close();
+                        transactionhistoryupdate(loggineduser);
+                        connection.close();
+                        JOptionPane.showMessageDialog(null, "Amount of Rs " + amountsendmoneyfield.getText() + " Has Sent to " + usernamesendmoneyfield.getText());
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(null,"User doesn't exists");
+                    }
+
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+
+
+            }
+        }
+        else{
+            JOptionPane.showMessageDialog(null,"Something Wrong. Please Try Again");
+        }
     }
 
-    public static void writeAllListtoFile(ArrayList<User> users) {
-        // Code will come here #########################################
-    }
 
-
-    public static void payutilitybills(String billtype, User user) {
-        // Code will come here #########################################
-    }
 
     public static void depositmoneypanel(JTabbedPane jTabbedPane, User user) {
         JPanel depositmoneypanel = new JPanel();
@@ -381,13 +495,118 @@ public class UserAccountFrame {
         creditbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                try {
+                    connection = DriverManager.getConnection("jdbc:oracle:thin:@//localhost:1521/pdborcl", "hr", "hr");
+                    String query = "insert into creditcard (cardno, expirydate, cardtype, cvv, username,amount) VALUES (?,?,?,?,?,?)";
+                    PreparedStatement preparedStatement = connection.prepareStatement(query);
+                    preparedStatement.setString(1,creditcardnof.getText());
+                    preparedStatement.setString(2,carddate1.getSelectedItem().toString()+"-"+carddate2.getSelectedItem().toString());
+                    preparedStatement.setString(3,cardtypesbox.getSelectedItem().toString());
+                    preparedStatement.setInt(4,Integer.parseInt(creditsecurityf.getText()));
+                    preparedStatement.setString(5,user.getUsername());
+                    preparedStatement.setInt(6,Integer.parseInt(creditamountf.getText()));
+                    preparedStatement.execute();
+                    preparedStatement.close();
+                    user.setWalletmoney(user.getWalletmoney()+Integer.parseInt(creditamountf.getText()));
+                    totalbalancelabel.setText(" Balance: " + user.getWalletmoney() + " PKR");
+                    String query2= "Update MEMBER set walletmoney=walletmoney+? where username =?";
+                    PreparedStatement preparedStatement1 = connection.prepareStatement(query2);
+                    preparedStatement1.setInt(1,Integer.parseInt(creditamountf.getText()));
+                    preparedStatement1.setString(2,user.getUsername());
+                    preparedStatement1.execute();
+                    preparedStatement1.close();
+                    String query3 ="insert into transaction(transactionid, senderusername, receiverusername, DATEANDTIME,Amount) VALUES (seq_transid.nextval,?,?,SYSDATE,?)";
+                    PreparedStatement preparedStatement2 = connection.prepareStatement(query3);
+                    preparedStatement2.setString(1,"Credit/Debit Card "+creditcardnof.getText().substring(0,2)+"X-XXXX-XXXX-XXXX");
+                    preparedStatement2.setString(2,user.getUsername());
+                    preparedStatement2.setInt(3,Integer.parseInt(creditamountf.getText()));
+                    preparedStatement2.execute();
+                    preparedStatement2.close();
+                    transactionhistoryupdate(user);
+                    JOptionPane.showMessageDialog(null,"Amount Deposited into your Account");
+                    connection.close();
+
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+
+
             }
         });
     }
 
-    private static void Creditcardamountdeposit(double amount, User user, String creditcardno) {
-        // Code will come here #########################################
+
+    public static void transactionhistoryupdate(User loggineduser) throws SQLException {
+        connection = DriverManager.getConnection(
+                "jdbc:oracle:thin:@//localhost:1521/pdborcl", "hr", "hr");
+        String query1 = "select * FROM TRANSACTION order by TRANSACTIONID";
+        Statement s1 = connection.createStatement();
+        ResultSet resultSet2 = s1.executeQuery(query1);
+        String transhistory = "";
+
+
+        while (resultSet2.next()){
+            if(resultSet2.getString("SENDERUSERNAME").equals(loggineduser.getUsername())){
+                transhistory+="\n"+resultSet2.getString("DATEANDTIME")+"    You Have Sent Rs "+resultSet2.getString("AMOUNT")+" to "+
+                        resultSet2.getString("RECEIVERUSERNAME");
+            }
+            else if(resultSet2.getString("RECEIVERUSERNAME").equals(loggineduser.getUsername())){
+                transhistory+="\n"+resultSet2.getString("DATEANDTIME")+"    You Have Received Rs "+resultSet2.getString("AMOUNT")+" FROM "+
+                        resultSet2.getString("SENDERUSERNAME");
+
+            }
+        }
+        transhistory+="\n____________________________________________________\n";
+        String query2 = "select * FROM UTILITYBILL order by BILLNO";
+        Statement s2 = connection.createStatement();
+        ResultSet resultSet3 = s2.executeQuery(query2);
+        while (resultSet3.next()){
+            if(resultSet3.getString("USERNAME").equals(loggineduser.getUsername())){
+             transhistory+="\nYou Have Paid "+resultSet3.getString("BILLTYPE")+" Bill "+ "of "+ "Rs "+resultSet3.getString("AMOUNT")+ " of"+" Customer ID "+resultSet3.getString("CUSTOMERID");
+
+            }
+        }
+        s1.close();
+        resultSet2.close();
+        connection.close();
+        transactionhistory.setText(transhistory);
+
+    }
+    public static void queriespanel(JTabbedPane jTabbedPane,User loggineduser){
+        JPanel queriespanel = new JPanel();
+        queriespanel.setLayout(null);
+        queriespanel.setForeground(Color.WHITE);
+        JLabel querylabel = new JLabel("Enter your Query");
+        querylabel.setBackground(Color.BLACK);
+        querylabel.setBounds(20, 0, 200, 100);
+        RoundJTextfield queryfield = new RoundJTextfield("Enter your Query");
+        queryfield.setBounds(155, 35, 800, 30);
+        JButton submitbutton = new JButton("Submit");
+        submitbutton.setBounds(20, 60, 180, 100);
+        submitbutton.setIcon(new ImageIcon("submitbutton2.png"));
+        submitbutton.setBorder(null);
+        submitbutton.setBorderPainted(false);
+        submitbutton.setContentAreaFilled(false);
+        submitbutton.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        submitbutton.setDoubleBuffered(true);
+        submitbutton.setFocusPainted(false);
+        submitbutton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        queriespanel.add(querylabel);
+        queriespanel.add(queryfield);
+        queriespanel.add(submitbutton);
+        jTabbedPane.add("Queries",queriespanel);
+        submitbutton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataBase dataBase = new DataBase();
+                try {
+                    dataBase.actionqueryinsert(queryfield.getText(),loggineduser.getUsername());
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+                queryfield.setText("");
+            }
+        });
     }
 }
 

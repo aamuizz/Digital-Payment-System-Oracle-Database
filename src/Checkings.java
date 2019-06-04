@@ -80,29 +80,6 @@ public class Checkings {
         return allcheck;
     }
 
-    public static boolean Usernamealreadycheck() {
-        ArrayList<User> users = Management.readalldata();
-        boolean check = false;
-        for (int i = 0; i < users.size(); i++) {
-            if (MainFrame.usernameusertextfield.getText().toLowerCase().equals(users.get(i).getUsername().toLowerCase())) {
-                check = true;
-                break;
-            }
-        }
-        return check;
+
 
     }
-
-    public static boolean Usernamealreadycheckagent() {
-        ArrayList<Agent> agents = Management.readalldataagent();
-        boolean check = false;
-        for (int i = 0; i < agents.size(); i++) {
-            if (AdminManagement.usernameagenttextfield.getText().toLowerCase().equals(agents.get(i).getUsername().toLowerCase())) {
-                check = true;
-                break;
-            }
-        }
-        return check;
-
-    }
-}

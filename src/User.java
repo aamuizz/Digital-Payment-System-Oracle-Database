@@ -1,24 +1,15 @@
+
 import java.io.Serializable;
 
-public class User extends Person implements Serializable {
+public class User extends Person {
  private String username,password;
  private double walletmoney;
- private String transactionhistory;
 
-    public User(String name, String cnic, String phonenumber, String username, String password, double walletmoney, String transactionhistory) {
-        super(name, cnic, phonenumber);
-        this.username = username;
+    public User(String name, String cnic, int phonenumber, String email, String username, String username1, String password, double walletmoney) {
+        super(name, cnic, phonenumber, email, username);
+        this.username = username1;
         this.password = password;
         this.walletmoney = walletmoney;
-        this.transactionhistory = transactionhistory;
-    }
-
-    public String getTransactionhistory() {
-        return transactionhistory;
-    }
-
-    public void setTransactionhistory(String transactionhistory) {
-        this.transactionhistory = transactionhistory;
     }
 
     public String getUsername() {

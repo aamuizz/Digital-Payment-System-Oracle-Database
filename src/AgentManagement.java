@@ -1,8 +1,11 @@
+import jdk.nashorn.internal.scripts.JO;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,8 +19,11 @@ public class AgentManagement {
     static JButton sendmoneybutton, Paybutton, Paybutton1, paybuttoninternet, creditbutton,
             logoutbutton;
     static TextArea transactionhistory;
+    static String username;
 
-    public static void FrontUserDisplay(Agent loggineduser) {
+    public static void FrontUserDisplay(String uname) {
+        username = uname;
+        DataBase dataBase = new DataBase();
         MainFrame.mainframe.setVisible(false);
         JFrame agentframe = new JFrame("My Account");
         agentframe.getContentPane().setLayout(new GridLayout());
@@ -47,7 +53,7 @@ public class AgentManagement {
         Font mainfont = new Font("Arial", Font.PLAIN, 20);
         JLabel userlabel = new JLabel(image2);
         userlabel.setBounds(0, 10, 100, 100);
-        hilabel = new JLabel(" " + loggineduser.getUsername());
+        hilabel = new JLabel(" " + username);
         hilabel.setFont(new Font("ArialBlack", Font.BOLD, 25));
         hilabel.setBounds(95, 38, 1200, 50);
         hilabel.setForeground(Color.BLACK);
@@ -56,7 +62,7 @@ public class AgentManagement {
         JLabel hiimagelabel = new JLabel(image1);
         hiimagelabel.setBounds(0, 100, 100, 100);
         homepanel.add(hiimagelabel);
-        welcomelabel = new JLabel(" " + loggineduser.getName());
+        welcomelabel = new JLabel(" " + dataBase.getName(username));
         welcomelabel.setBounds(95, 105, 1200, 100);
         welcomelabel.setFont(new Font("ArialBlack", Font.BOLD, 25));
         welcomelabel.setForeground(Color.BLACK);
@@ -65,7 +71,7 @@ public class AgentManagement {
         JLabel walleticon = new JLabel(wallet);
         walleticon.setBounds(0, 200, 100, 100);
         homepanel.add(walleticon);
-        totalbalancelabel = new JLabel(" Balance: " + loggineduser.getWalletmoney() + " PKR");
+        totalbalancelabel = new JLabel(" Balance: " + dataBase.getMoney(username) + " PKR");
         totalbalancelabel.setFont(new Font("LiSong Pro", Font.BOLD, 25));
         totalbalancelabel.setForeground(Color.BLACK);
         totalbalancelabel.setBounds(95, 210, 1200, 80);
@@ -77,7 +83,7 @@ public class AgentManagement {
         transactionlabel.setBounds(5, 280, 1200, 80);
         transactionlabel.setFont(new Font("Arial", Font.BOLD, 22));
         transactionhistory = new TextArea();
-        transactionhistory.setText(loggineduser.getTransactionhistory());
+        transactionhistory.setText(dataBase.getTransactionHistory(username));
         transactionhistory.setFont(new Font("Arial", Font.ITALIC, 20));
         transactionhistory.setEditable(false);
         transactionhistory.setBounds(0, 350, 1600, 450);
@@ -162,29 +168,21 @@ public class AgentManagement {
         sendmoneybutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int dialogbutton = JOptionPane.YES_NO_OPTION;
-                int dialogresult = JOptionPane.showConfirmDialog(null, "Are you sure you want" +
-                        " to send money to " + usernamesendmoneyfield.getText(), "Confirmation", dialogbutton);
-                if (dialogresult == 0) {
-
-                    Double walletmoney = 0.0;
-                    ArrayList<Agent> agents = Management.readalldataagent();
-                    for (int i = 0; i < agents.size(); i++) {
-                        if (agents.get(i).getUsername().toLowerCase().equals(loggineduser.getUsername().toLowerCase())) {
-                            walletmoney = agents.get(i).getWalletmoney();
-                            break;
-                        }
-                    }
+                if (dataBase.isUserExist(usernamesendmoneyfield.getText())) {
+                    int dialogbutton = JOptionPane.YES_NO_OPTION;
+                    int dialogresult = JOptionPane.showConfirmDialog(null, "Are you sure you want" +
+                            " to send money to " + usernamesendmoneyfield.getText(), "Confirmation", dialogbutton);
                     if (Checkings.usernamecheck(usernamesendmoneyfield.getText())) {
                         if (Checkings.isNumeric(amountsendmoneyfield.getText())) {
                             if (Double.parseDouble(amountsendmoneyfield.getText()) > 0) {
-                                if (walletmoney >= Double.parseDouble(amountsendmoneyfield.getText())) {
+                                try {
                                     sendmoneymain(usernamesendmoneyfield.getText(),
-                                            Double.parseDouble(amountsendmoneyfield.getText()),
-                                            loggineduser.getUsername());
-                                } else {
-                                    JOptionPane.showMessageDialog(null, "You don't have enough money");
+                                            Integer.parseInt(amountsendmoneyfield.getText()),
+                                            username);
+                                } catch (SQLException e1) {
+                                    e1.printStackTrace();
                                 }
+
                             } else {
                                 JOptionPane.showMessageDialog(null, "Amount can't be less than or equal to zero");
                             }
@@ -195,8 +193,8 @@ public class AgentManagement {
                         JOptionPane.showMessageDialog(null, "Username cannot contain spaces");
                     }
                 } else {
-                    //Do Nothing
-
+                    JOptionPane.showMessageDialog(null, "User not exist");
+                    usernamesendmoneyfield.setText("");
                 }
             }
 
@@ -224,14 +222,18 @@ public class AgentManagement {
 
         JButton sendmoneyagentbutton = new JButton("Send Money");
         sendmoneyagentbutton.setBounds(20, 140, 170, 75);
-        sendmoneyagentbutton.setIcon(new ImageIcon("sendmoneybutton1.png"));
+        sendmoneyagentbutton.setIcon(new
+
+                ImageIcon("sendmoneybutton1.png"));
         sendmoneyagentbutton.setBorder(null);
         sendmoneyagentbutton.setBorderPainted(false);
         sendmoneyagentbutton.setContentAreaFilled(false);
         sendmoneyagentbutton.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
         sendmoneyagentbutton.setDoubleBuffered(true);
         sendmoneyagentbutton.setFocusPainted(false);
-        sendmoneyagentbutton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        sendmoneyagentbutton.setCursor(new
+
+                Cursor(Cursor.HAND_CURSOR));
         sendmoneyagentpanel.setForeground(Color.WHITE);
         sendmoneyagentpanel.add(sendmoneyagentbutton);
         jTabbedPane.add("Send Money to Agent Account", sendmoneyagentpanel);
@@ -240,8 +242,41 @@ public class AgentManagement {
         sendmoneyagentbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                if (dataBase.isAgent(agentnamesendmoneyfield.getText())) {
+                    int dialogbutton = JOptionPane.YES_NO_OPTION;
+                    int dialogresult = JOptionPane.showConfirmDialog(null, "Are you sure you want" +
+                            " to send money to " + agentnamesendmoneyfield.getText(), "Confirmation", dialogbutton);
+
+                    if (!agentnamesendmoneyfield.getText().toLowerCase().equals(username.toLowerCase())) {
+                        if (Checkings.usernamecheck(agentnamesendmoneyfield.getText())) {
+                            if (Checkings.isNumeric(amountsendmoneyagentfield.getText())) {
+                                if (Double.parseDouble(amountsendmoneyagentfield.getText()) > 0) {
+                                    try {
+                                        sendmoneytoagentaccount(agentnamesendmoneyfield.getText(),
+                                                Integer.parseInt(amountsendmoneyagentfield.getText()),
+                                                username);
+                                    } catch (SQLException e1) {
+                                        e1.printStackTrace();
+                                    }
+
+                                }
+
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Amount can't be less than or equal to zero");
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Amount must be in numbers");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Username cannot contain spaces");
+                    }
+                }
+                else {
+                    JOptionPane.showMessageDialog(null,"Agent not exist");
+                    agentnamesendmoneyfield.setText("");
+                }
             }
+
         });
 
 
@@ -249,23 +284,33 @@ public class AgentManagement {
         JPanel electricitybill = new JPanel();
         electricitybill.setLayout(null);
         electricitybill.setForeground(Color.WHITE);
-        consumernolabel = new JLabel("Consumer no");
+        consumernolabel = new
+
+                JLabel("Consumer no");
         consumernolabel.setBackground(Color.BLACK);
         consumernolabel.setBounds(20, 0, 200, 100);
         consumernolabel.setFont(mainfont);
-        consumernofield = new RoundJTextfield("Consumer Number here");
+        consumernofield = new
+
+                RoundJTextfield("Consumer Number here");
         consumernofield.setBounds(155, 35, 300, 30);
 
-        Paybutton = new JButton("Pay");
+        Paybutton = new
+
+                JButton("Pay");
         Paybutton.setBounds(20, 60, 150, 100);
-        Paybutton.setIcon(new ImageIcon("paybutton1.png"));
+        Paybutton.setIcon(new
+
+                ImageIcon("paybutton1.png"));
         Paybutton.setBorder(null);
         Paybutton.setBorderPainted(false);
         Paybutton.setContentAreaFilled(false);
         Paybutton.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
         Paybutton.setDoubleBuffered(true);
         Paybutton.setFocusPainted(false);
-        Paybutton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        Paybutton.setCursor(new
+
+                Cursor(Cursor.HAND_CURSOR));
 
 
         electricitybill.add(Paybutton);
@@ -276,23 +321,33 @@ public class AgentManagement {
 
         JPanel gasbill = new JPanel();
         gasbill.setLayout(null);
-        consumernolabel1 = new JLabel("Consumer no");
+        consumernolabel1 = new
+
+                JLabel("Consumer no");
         consumernolabel1.setBackground(Color.BLACK);
         consumernolabel1.setBounds(20, 0, 200, 100);
         consumernolabel1.setFont(mainfont);
-        consumernofield1 = new RoundJTextfield("Consumer Number here");
+        consumernofield1 = new
+
+                RoundJTextfield("Consumer Number here");
         consumernofield1.setBounds(155, 35, 300, 30);
 
-        Paybutton1 = new JButton("Pay");
+        Paybutton1 = new
+
+                JButton("Pay");
         Paybutton1.setBounds(20, 60, 150, 100);
-        Paybutton1.setIcon(new ImageIcon("paybutton1.png"));
+        Paybutton1.setIcon(new
+
+                ImageIcon("paybutton1.png"));
         Paybutton1.setBorder(null);
         Paybutton1.setBorderPainted(false);
         Paybutton1.setContentAreaFilled(false);
         Paybutton1.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
         Paybutton1.setDoubleBuffered(true);
         Paybutton1.setFocusPainted(false);
-        Paybutton1.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        Paybutton1.setCursor(new
+
+                Cursor(Cursor.HAND_CURSOR));
 
         gasbill.add(Paybutton1);
         gasbill.add(consumernolabel1);
@@ -310,64 +365,120 @@ public class AgentManagement {
         internetbox.setBounds(155, 38, 120, 20);
         internetbill.add(internetbox);
 
-        customernolabel = new JLabel("Consumer no");
+        customernolabel = new
+
+                JLabel("Consumer no");
         customernolabel.setBackground(Color.BLACK);
         customernolabel.setBounds(20, 40, 200, 100);
         customernolabel.setFont(mainfont);
         internetbill.add(customernolabel);
 
-        customernofield = new RoundJTextfield("Consumer Number here");
+        customernofield = new
+
+                RoundJTextfield("Consumer Number here");
         customernofield.setBounds(155, 75, 300, 30);
         internetbill.add(customernofield);
 
-        paybuttoninternet = new JButton("Pay");
+        paybuttoninternet = new
+
+                JButton("Pay");
         paybuttoninternet.setBounds(20, 85, 150, 100);
-        paybuttoninternet.setIcon(new ImageIcon("paybutton1.png"));
+        paybuttoninternet.setIcon(new
+
+                ImageIcon("paybutton1.png"));
         paybuttoninternet.setBorder(null);
         paybuttoninternet.setBorderPainted(false);
         paybuttoninternet.setContentAreaFilled(false);
         paybuttoninternet.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
         paybuttoninternet.setDoubleBuffered(true);
         paybuttoninternet.setFocusPainted(false);
-        paybuttoninternet.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        paybuttoninternet.setCursor(new
+
+                Cursor(Cursor.HAND_CURSOR));
         internetbill.add(paybuttoninternet);
 
         jTabbedPane.add("Internet Bill Payment", internetbill);
         agentframe.setVisible(true);
-        Paybutton.addActionListener(e -> {
-            // Code will come here #########################################
+        Paybutton.addActionListener(e ->
+
+        {
+            if (Checkings.isNumeric(consumernofield.getText())) {
+                payutilitybills("Electricity",consumernofield.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
-        Paybutton1.addActionListener(e -> {
-            // Code will come here #########################################
+        Paybutton1.addActionListener(e ->
+
+        {
+            if (Checkings.isNumeric(consumernofield1.getText())) {
+                payutilitybills("Gas",consumernofield1.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
-        paybuttoninternet.addActionListener(e -> {
-            // Code will come here #########################################
+        paybuttoninternet.addActionListener(e ->
+
+        {
+            if (Checkings.isNumeric(customernofield.getText())) {
+                payutilitybills(internetbox.getSelectedItem().toString(),customernofield.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
-        depositmoneypanel(jTabbedPane, loggineduser);
-    }
 
-    public static void sendmoneymain(String username, double amount, String senderusername) {
-        // Code will come here #########################################
+//        depositmoneypanel(jTabbedPane, loggineduser);
+        queriespanel(jTabbedPane,username);
 
     }
 
-    public static void sendmoneytoagentaccount(String username, double amount, String senderusername) {
-        // Code will come here #########################################
+
+    public static void sendmoneymain(String uname, int amount, String senderusername) throws SQLException {
+        DataBase dataBase = new DataBase();
+        if(dataBase.isMemberExist(uname)) {
+            if(dataBase.havenoughmoneyagent(username,amount)) {
+                dataBase.sendMoney(username, uname, amount);
+                JOptionPane.showMessageDialog(null,"Money Sent Successfully");
+            }
+            else{
+                JOptionPane.showMessageDialog(null,"You Don't Have Enough Money");
+            }
+
+        }
+        else{
+            JOptionPane.showMessageDialog(null,"User doesn't Exists");
+        }
     }
 
-    public static void writeAllListtoFile(ArrayList<User> users) {
-        // Code will come here #########################################
+    public static void sendmoneytoagentaccount(String uname, int amount, String senderusername) throws SQLException {
+        DataBase dataBase = new DataBase();
+        if(dataBase.isAgent(uname)) {
+            if(dataBase.havenoughmoneyagent(username,amount)) {
+                dataBase.sendMoney(username, uname, amount);
+                JOptionPane.showMessageDialog(null,"Money Sent Successfully");
+            }else{
+                JOptionPane.showMessageDialog(null,"You Don't Have Enough Money");
+            }
+        }
+        else{
+            JOptionPane.showMessageDialog(null,"Agent Doesn't Exists");
+        }
     }
 
-    public static void writeAllListtoFileAgent(ArrayList<Agent> Agents) {
-        // Code will come here #########################################
-    }
 
 
-    public static void payutilitybills(String billtype, Agent user) {
-        // Code will come here #########################################
-
-
+    public static void payutilitybills(String billtype,String consumerid) {
+        int dialogbutton = JOptionPane.YES_NO_OPTION;
+        int range = (2000 - 1000) + 1;
+        int randombill = (int) (Math.random() * range) + 500;
+        int dialogresult = JOptionPane.showConfirmDialog(null, "Your total bill for the " + billtype + " is " + randombill + "\n" +
+                "Are you Sure You want to Pay?", "Bill Payment", dialogbutton);
+        if (dialogresult == 0) {
+            DataBase dataBase = new DataBase();
+            dataBase.payBill(username,randombill,billtype,consumerid);
+        } else {
+            JOptionPane.showMessageDialog(null, "Bill Not Paid");
+        }
     }
 
     public static void depositmoneypanel(JTabbedPane jTabbedPane, Agent user) {
@@ -477,13 +588,68 @@ public class AgentManagement {
         creditbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                if (Checkings.isalphabetic(creditfirstnamef.getText()) && Checkings.isalphabetic(creditlastnamef.getText())) {
+                    if (Checkings.isNumeric(creditcardnof.getText()) && creditcardnof.getText().length() == 16) {
+                        if (Checkings.isNumeric(creditsecurityf.getText()) && creditsecurityf.getText().length() == 3) {
+                            if (Checkings.isNumeric(creditamountf.getText())) {
+                                Creditcardamountdeposit(Double.parseDouble(creditamountf.getText()), user
+                                        , creditcardnof.getText());
+                            } else {
+                                JOptionPane.showMessageDialog(null, "The Amount must be in numbers");
+                            }
+
+                        } else {
+                            JOptionPane.showMessageDialog(null, "CVV Code must be of 3 digits");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Credit card must be in numbers or must have 16 digits");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "The name should be alphabetic");
+                }
             }
         });
     }
 
     private static void Creditcardamountdeposit(double amount, Agent user, String creditcardno) {
-        // Code will come here #########################################
+
     }
+    public static void queriespanel(JTabbedPane jTabbedPane,String username){
+        JPanel queriespanel = new JPanel();
+        queriespanel.setLayout(null);
+        queriespanel.setForeground(Color.WHITE);
+        JLabel querylabel = new JLabel("Enter your Query");
+        querylabel.setBackground(Color.BLACK);
+        querylabel.setBounds(20, 0, 200, 100);
+        RoundJTextfield queryfield = new RoundJTextfield("Enter your Query");
+        queryfield.setBounds(155, 35, 800, 30);
+        JButton submitbutton = new JButton("Submit");
+        submitbutton.setBounds(20, 60, 180, 100);
+        submitbutton.setIcon(new ImageIcon("submitbutton2.png"));
+        submitbutton.setBorder(null);
+        submitbutton.setBorderPainted(false);
+        submitbutton.setContentAreaFilled(false);
+        submitbutton.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        submitbutton.setDoubleBuffered(true);
+        submitbutton.setFocusPainted(false);
+        submitbutton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        queriespanel.add(querylabel);
+        queriespanel.add(queryfield);
+        queriespanel.add(submitbutton);
+        jTabbedPane.add("Queries",queriespanel);
+        submitbutton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataBase dataBase = new DataBase();
+                try {
+                    dataBase.actionqueryinsert(queryfield.getText(),username);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+                queryfield.setText("");
+            }
+        });
+    }
+
 
 }

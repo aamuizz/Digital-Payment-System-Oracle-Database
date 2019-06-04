@@ -1,7 +1,7 @@
 import java.io.Serializable;
 
 public class Administrator extends Person implements Serializable {
-    private String Username,Password,transactionhistory;
+    private String Username,Password;
 
     public String getUsername() {
         return Username;
@@ -19,21 +19,9 @@ public class Administrator extends Person implements Serializable {
         Password = password;
     }
 
-    public String getTransactionhistory() {
-        return transactionhistory;
-    }
-
-    public void setTransactionhistory(String transactionhistory) {
-        this.transactionhistory = transactionhistory;
-    }
-
-    public Administrator(String name, String cnic, String phonenumber, String username, String password, String transactionhistory) {
-        super(name, cnic, phonenumber);
-        Username = username;
+    public Administrator(String name, String cnic, int phonenumber, String email, String username, String username1, String password) {
+        super(name, cnic, phonenumber, email, username);
+        Username = username1;
         Password = password;
-        this.transactionhistory=transactionhistory;
-
-
     }
-
 }

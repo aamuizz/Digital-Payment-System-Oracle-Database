@@ -1,10 +1,12 @@
 import jdk.nashorn.internal.scripts.JO;
 
 import javax.swing.*;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -18,8 +20,13 @@ public class AdminManagement {
     static JButton sendmoneybutton, Paybutton, Paybutton1, paybuttoninternet, creditbutton,
             logoutbutton;
     static TextArea transactionhistory;
+    static String username;
 
-    public static void FrontUserDisplay(Administrator admin) {
+    public static void FrontUserDisplay(String uname) throws SQLException {
+        DataBase dataBase = new DataBase();
+        username = uname;
+        String name = dataBase.getName(username);
+
         Adminagentloginframe.adminagentframe.setVisible(false);
         JFrame adminframe = new JFrame("My Account");
         adminframe.getContentPane().setLayout(new GridLayout());
@@ -50,7 +57,7 @@ public class AdminManagement {
         Font mainfont = new Font("Arial", Font.PLAIN, 20);
         JLabel userlabel = new JLabel(image2);
         userlabel.setBounds(0, 10, 100, 100);
-        hilabel = new JLabel(" " + admin.getUsername());
+        hilabel = new JLabel(" " + username);
         hilabel.setFont(new Font("ArialBlack", Font.BOLD, 25));
         hilabel.setBounds(95, 38, 1200, 50);
         hilabel.setForeground(Color.BLACK);
@@ -59,7 +66,7 @@ public class AdminManagement {
         JLabel hiimagelabel = new JLabel(image1);
         hiimagelabel.setBounds(0, 100, 100, 100);
         homepanel.add(hiimagelabel);
-        welcomelabel = new JLabel(" " + admin.getName());
+        welcomelabel = new JLabel(" " + name);
         welcomelabel.setBounds(95, 105, 1200, 100);
         welcomelabel.setFont(new Font("ArialBlack", Font.BOLD, 25));
         welcomelabel.setForeground(Color.BLACK);
@@ -80,7 +87,7 @@ public class AdminManagement {
         transactionlabel.setBounds(5, 280, 1200, 80);
         transactionlabel.setFont(new Font("Arial", Font.BOLD, 22));
         transactionhistory = new TextArea();
-        transactionhistory.setText(admin.getTransactionhistory());
+        transactionhistory.setText(dataBase.getTransactionHistory(username));
         transactionhistory.setFont(new Font("Arial", Font.ITALIC, 20));
         transactionhistory.setEditable(false);
         transactionhistory.setBounds(0, 350, 1600, 450);
@@ -170,8 +177,8 @@ public class AdminManagement {
                         if (Checkings.isNumeric(amountsendmoneyfield.getText())) {
                             if (Double.parseDouble(amountsendmoneyfield.getText()) > 0) {
                                 sendmoneymain(usernamesendmoneyfield.getText(),
-                                        Double.parseDouble(amountsendmoneyfield.getText()),
-                                        admin.getUsername());
+                                        Integer.parseInt(amountsendmoneyfield.getText()),
+                                        username);
 
                             } else {
                                 JOptionPane.showMessageDialog(null, "Amount can't be less than or equal to zero");
@@ -235,8 +242,8 @@ public class AdminManagement {
                         if (Checkings.isNumeric(amountsendmoneyagentfield.getText())) {
                             if (Double.parseDouble(amountsendmoneyagentfield.getText()) > 0) {
                                 addmoneytoagentaccount(agentnamesendmoneyfield.getText(),
-                                        Double.parseDouble(amountsendmoneyagentfield.getText()),
-                                        admin.getUsername());
+                                        Integer.parseInt(amountsendmoneyagentfield.getText()),
+                                        uname);
 
                             } else {
                                 JOptionPane.showMessageDialog(null, "Amount can't be less than or equal to zero");
@@ -316,7 +323,14 @@ public class AdminManagement {
         RegisterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #################################################################################
+                String username = AdminManagement.usernameagenttextfield.getText();
+                if (!dataBase.isUserExist(username)) {
+                    JOptionPane.showMessageDialog(null, "Registration Successfull");
+                    RegistrationofAgent();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Username Already taken");
+                    usernameagenttextfield.setText("");
+                }
             }
 
         });
@@ -350,7 +364,9 @@ public class AdminManagement {
         Deletebutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                if (Checkings.usernamecheck(deleteuserfield.getText())) {
+                    deleteusermethod(deleteuserfield.getText());
+                }
 
             }
         });
@@ -384,7 +400,9 @@ public class AdminManagement {
         Deleteagentbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #########################################
+                if (Checkings.usernamecheck(deleteagentfield.getText())) {
+                    deleteagentmethod(deleteagentfield.getText());
+                }
 
             }
         });
@@ -480,48 +498,111 @@ public class AdminManagement {
         jTabbedPane.add("Internet Bill Payment", internetbill);
         adminframe.setVisible(true);
         Paybutton.addActionListener(e -> {
-            // Code will come here #########################################
+            if (Checkings.isNumeric(consumernofield.getText())) {
+                payutilitybills("Electricity",consumernofield.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
         Paybutton1.addActionListener(e -> {
-            // Code will come here #########################################
+            if (Checkings.isNumeric(consumernofield1.getText())) {
+                payutilitybills("Gas",consumernofield1.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
         paybuttoninternet.addActionListener(e -> {
-            // Code will come here #########################################
+            String balance = totalbalancelabel.getText();
+            String main = balance.substring(0, balance.length() - 5);
+            if (Checkings.isNumeric(customernofield.getText())) {
+                payutilitybills(internetbox.getSelectedItem().toString(),customernofield.getText());
+            } else {
+                JOptionPane.showMessageDialog(null, "Something Wrong Please Try Again");
+            }
         });
+        viewQuery(jTabbedPane);
     }
 
     public static void deleteusermethod(String username) {
-        // Code will come here #########################################
+        DataBase dataBase = new DataBase();
+        if (dataBase.isUserExist(username)) {
+            dataBase.deleteUser(username);
+            JOptionPane.showMessageDialog(null, "User removed successfully");
+        } else JOptionPane.showMessageDialog(null, "User doesnot exist");
     }
 
     public static void deleteagentmethod(String username) {
-        // Code will come here #########################################
+        DataBase dataBase = new DataBase();
+        if (dataBase.isUserExist(username)) {
+            dataBase.deleteUser(username);
+            JOptionPane.showMessageDialog(null, "Agent removed successfully");
+        } else JOptionPane.showMessageDialog(null, "Agent doesnot exist");
     }
 
-
-    public static void sendmoneymain(String username, double amount, String senderusername) {
-        // Code will come here #########################################
+    public static void sendmoneymain(String username, int amount, String senderusername) {
+        DataBase dataBase = new DataBase();
+        if (dataBase.isUserExist(username)) {
+            dataBase.updateMoney(username, amount);
+            DataBase dataBase1 = new DataBase();
+            dataBase1.addTransaction(senderusername,username,amount);
+            DataBase dataBase2 = new DataBase();
+            transactionhistory.setText(dataBase2.getTransactionHistory(senderusername));
+            JOptionPane.showMessageDialog(null, "Amount of " + amount + " has send successfully to " + username);
+        } else JOptionPane.showMessageDialog(null, "The User you want to send money not found");
     }
 
-    public static void writeAllListtoFile(ArrayList<User> users) {
-        // Code will come here #########################################
+    public static void payutilitybills(String billtype,String consumerno) {
+        int dialogbutton = JOptionPane.YES_NO_OPTION;
+        int range = (20 - 10) + 1;
+        int randombill = (int) (Math.random() * range) + 500;
+        int dialogresult = JOptionPane.showConfirmDialog(null, "Your total bill for the " + billtype + " is " + randombill + "\n" +
+                "Are you Sure You want to Pay?", "Bill Payment", dialogbutton);
+        if (dialogresult == 0) {
+            DataBase dataBase = new DataBase();
+            dataBase.payBill(username,randombill,billtype,consumerno);
+        } else {
+            JOptionPane.showMessageDialog(null, "Bill Not Paid");
+        }
     }
 
-    public static void writeAllListtoFileadmin(ArrayList<Administrator> admin) {
-        // Code will come here #########################################
+    public static void RegistrationofAgent() {
+        String name = nameagenttextfield.getText();
+        String cnic = cnicagenttextfield.getText();
+        String password = passwordagenttextfield.getText();
+        int phone_no = Integer.parseInt(phonenumberagenttextfield.getText());
+        String username = usernameagenttextfield.getText();
+
+        DataBase dataBase = new DataBase();
+        dataBase.registerAgent(username, name, username + "@gmail.com", phone_no, cnic, password);
     }
 
-
-    public static void payutilitybills(String billtype, Administrator admin) {
-        // Code will come here #########################################
+    public static void addmoneytoagentaccount(String username, int amount, String senderusername) {
+        DataBase dataBase = new DataBase();
+        if (dataBase.isUserExist(username)) {
+            dataBase.updateMoney(username, amount);
+            dataBase.addTransaction(senderusername,username,amount);
+            transactionhistory.setText(dataBase.getTransactionHistory(senderusername));
+            JOptionPane.showMessageDialog(null, "Amount of " + amount + " has send successfully to " + username);
+        } else JOptionPane.showMessageDialog(null, "The User you want to send money not found");
     }
-
-    public static void Registrationofadmin() {
-        // Code will come here #########################################
-    }
-
-    public static void addmoneytoagentaccount(String username, double amount, String senderusername) {
-        // Code will come here #########################################
+    public static void viewQuery(JTabbedPane jTabbedPane) throws SQLException {
+        JPanel querypanel = new JPanel();
+        querypanel.setLayout(null);
+        JLabel querylabel = new JLabel("Queries");
+        querylabel.setBounds(5, 5, 250, 50);
+        querylabel.setFont(new Font("Arial", Font.BOLD, 22));
+        TextArea queryhistory = new TextArea();
+        DataBase dataBase = new DataBase();
+        queryhistory.setText(dataBase.getQuerieshistory());
+        queryhistory.setFont(new Font("Arial", Font.ITALIC, 20));
+        queryhistory.setEditable(false);
+        queryhistory.setBounds(0, 60, 1600, 800);
+        queryhistory.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        queryhistory.setBackground(Color.WHITE);
+        queryhistory.setForeground(Color.BLACK);
+        querypanel.add(querylabel);
+        querypanel.add(queryhistory);
+        jTabbedPane.add("View Queries",querypanel);
     }
 
 }

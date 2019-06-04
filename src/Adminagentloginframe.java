@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class Adminagentloginframe {
@@ -97,13 +98,38 @@ public class Adminagentloginframe {
         LoginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code will come here #################################################################################
+                if (accounttypesbox.getSelectedIndex() == 0) {
+                    DataBase adminDataBase = new DataBase();
+                    String username = usernameloginadmintextfield.getText().toLowerCase();
+                    String password = passwordloginadmintextfield.getText();
+                    if (adminDataBase.isAdmin(username, password)) {
+                        adminagentframe.setVisible(false);
+                        JOptionPane.showMessageDialog(null, "Login Successful");
+                        try {
+                            AdminManagement.FrontUserDisplay(username);
+                        } catch (SQLException e1) {
+                            e1.printStackTrace();
+                        }
+                    } else
+                        JOptionPane.showMessageDialog(null, "Administrator not found");
+                } else {
+                    DataBase adminDataBase = new DataBase();
+                    String username = usernameloginadmintextfield.getText().toLowerCase();
+                    String password = passwordloginadmintextfield.getText();
+
+                    if (adminDataBase.isAgent(username, password)) {
+                        adminagentframe.setVisible(false);
+                        JOptionPane.showMessageDialog(null, "Login Successful");
+                        AgentManagement.FrontUserDisplay(username);
+                    } else
+                        JOptionPane.showMessageDialog(null, "Agent not found");
+                }
+
+
             }
 
         });
 
 
     }
-
-
 }
