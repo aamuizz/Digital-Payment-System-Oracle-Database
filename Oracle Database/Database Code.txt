@@ -1,0 +1,83 @@
+create table PERSON(
+  Username varchar(50),
+  Name varchar(150),
+  Email varchar(50),
+  Phoneno int,
+  CNIC varchar(50),
+  Personid int,
+  primary key (Username)
+);
+
+create sequence seq_personid
+  minvalue 1
+  start with 1
+  increment by 1
+  cache 10;
+
+create table Member(
+  username varchar(50) PRIMARY KEY ,
+  password varchar(500),
+  walletmoney int,
+  foreign key (username) references PERSON(username)
+
+);
+create table admin(
+  username varchar(50) PRIMARY KEY ,
+  password varchar(500),
+  FOREIGN KEY (username)references PERSON(username)
+);
+create table Agent(
+  username varchar(50) PRIMARY KEY ,
+  password varchar(500),
+  Walletmoney int,
+  FOREIGN KEY (username)references PERSON(username)
+);
+create sequence seq_transid
+  minvalue 1
+  start with 1
+  increment by 1
+  cache 10;
+
+create table transaction(
+  transactionid int PRIMARY KEY,
+  senderusername varchar(50),
+  receiverusername varchar(50),
+  Dateandtime date,
+  Amount int
+);
+create sequence seq_queryid
+  minvalue 1
+  start with 1
+  increment by 1
+  cache 10;
+create table query(
+  queryid int primary key,
+  querytext varchar(1000),
+  username varchar(50)
+
+);
+create table creditcard(
+  cardno varchar(50),
+  expirydate varchar(50),
+  cardtype varchar(50),
+  cvv int,
+  username varchar(50),
+  Amount int,
+  FOREIGN KEY (username)references PERSON(username)
+
+);
+create sequence seq_utilitybill
+  minvalue 1
+  start with 1
+  increment by 1
+  cache 10;
+create table utilitybill(
+  billno int PRIMARY KEY,
+  customerid varchar(50),
+  amount int,
+  billtype varchar(50),
+  username varchar(50),
+  foreign key (username)references PERSON(username)
+
+);
+
