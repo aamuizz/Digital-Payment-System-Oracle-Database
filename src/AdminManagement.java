@@ -521,6 +521,7 @@ public class AdminManagement {
             }
         });
         viewQuery(jTabbedPane);
+        userview(jTabbedPane);
     }
 
     public static void deleteusermethod(String username) {
@@ -529,6 +530,26 @@ public class AdminManagement {
             dataBase.deleteUser(username);
             JOptionPane.showMessageDialog(null, "User removed successfully");
         } else JOptionPane.showMessageDialog(null, "User doesnot exist");
+    }
+    public static void userview(JTabbedPane jTabbedPane) throws SQLException {
+        JPanel querypanel = new JPanel();
+        querypanel.setLayout(null);
+        JLabel querylabel = new JLabel("Queries");
+        querylabel.setBounds(5, 5, 250, 50);
+        querylabel.setFont(new Font("Arial", Font.BOLD, 22));
+        TextArea queryhistory = new TextArea();
+        DataBase dataBase = new DataBase();
+        queryhistory.setText(dataBase.getuserhistory());
+        queryhistory.setFont(new Font("Arial", Font.ITALIC, 20));
+        queryhistory.setEditable(false);
+        queryhistory.setBounds(0, 60, 1600, 800);
+        queryhistory.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        queryhistory.setBackground(Color.WHITE);
+        queryhistory.setForeground(Color.BLACK);
+        querypanel.add(querylabel);
+        querypanel.add(queryhistory);
+        jTabbedPane.add("User List",querypanel);
+
     }
 
     public static void deleteagentmethod(String username) {
@@ -542,7 +563,7 @@ public class AdminManagement {
     public static void sendmoneymain(String username, int amount, String senderusername) {
         DataBase dataBase = new DataBase();
         if (dataBase.isUserExist(username)) {
-            dataBase.updateMoney(username, amount);
+            dataBase.updateMoney(username, amount,0);
             DataBase dataBase1 = new DataBase();
             dataBase1.addTransaction(senderusername,username,amount);
             DataBase dataBase2 = new DataBase();
@@ -578,8 +599,8 @@ public class AdminManagement {
 
     public static void addmoneytoagentaccount(String username, int amount, String senderusername) {
         DataBase dataBase = new DataBase();
-        if (dataBase.isUserExist(username)) {
-            dataBase.updateMoney(username, amount);
+        if (dataBase.isAgent(username)) {
+            dataBase.updateMoney(username, amount,0);
             dataBase.addTransaction(senderusername,username,amount);
             transactionhistory.setText(dataBase.getTransactionHistory(senderusername));
             JOptionPane.showMessageDialog(null, "Amount of " + amount + " has send successfully to " + username);

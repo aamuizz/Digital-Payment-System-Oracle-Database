@@ -1,6 +1,7 @@
 import jdk.nashorn.internal.scripts.JO;
 
 import javax.swing.*;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +21,7 @@ public class AgentManagement {
             logoutbutton;
     static TextArea transactionhistory;
     static String username;
+    static JComboBox<String> comboBox = new JComboBox<>();
 
     public static void FrontUserDisplay(String uname) {
         username = uname;
@@ -30,6 +32,15 @@ public class AgentManagement {
         agentframe.setLocationRelativeTo(null);
         agentframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         agentframe.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+
+        // @@@@@@@@@@
+
+        ArrayList<String> arrayList = dataBase.getAllUsers();
+
+        for (int i = 0; i < arrayList.size(); i++) {
+            comboBox.add(arrayList.get(i));
+        }
 
         Color alphaZero = new Color(204, 204, 204, 32);
         JTabbedPane jTabbedPane = new JTabbedPane();

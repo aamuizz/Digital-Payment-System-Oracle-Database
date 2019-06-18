@@ -2,6 +2,7 @@ import sun.management.Agent;
 
 import javax.swing.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DataBase {
     private static Connection connection = null;
@@ -197,6 +198,25 @@ public class DataBase {
 
 
     }
+
+    public String getuserhistory() throws SQLException {
+        String userqueryhistory="";
+        String query = "Select * from Member natural join PERSON";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()){
+            userqueryhistory+=
+                    "\n"+"Username:"+resultSet.getString("USERNAME")+
+                            "\n"+"Name: "+resultSet.getString("NAME")+
+                            "\n"+"Email: "+resultSet.getString("Email")+
+                            "\n"+"Phoneno: "+resultSet.getString("PHONENO")+
+                            "\n"+"CNIC: "+resultSet.getString("CNIC")+
+                            "\n"+"____________________________________________________________________________________";
+        }
+        return userqueryhistory;
+
+
+    }
     public boolean havenoughmoneyagent(String username,int amount) throws SQLException {
         String query = "SELECT WALLETMONEY from AGENT where USERNAME=?";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -210,7 +230,7 @@ public class DataBase {
 
     }
 
-    public void updateMoney(String username, int amount) {
+    public void updateMoney(String username, int amount,int agentadmin) {
         try {
             String query = "";
             int balance = 0;
@@ -229,7 +249,7 @@ public class DataBase {
                 preparedStatement.setInt(1, balance);
                 preparedStatement.setString(2, username);
                 resultSet = preparedStatement.executeQuery();
-                if(isAgent(username)) {
+                if(agentadmin==1) {
                     AgentManagement.totalbalancelabel.setText(" Balance: " + balance + " PKR");
                 }
             }
@@ -255,8 +275,8 @@ public class DataBase {
     }
 
     public void sendMoney(String sender, String reciever, int amount) {
-        updateMoney(reciever, amount);
-        updateMoney(sender, -amount);
+        updateMoney(reciever, amount,1);
+        updateMoney(sender, -amount,1);
 
 
         addTransaction(sender, reciever, amount);
@@ -463,5 +483,21 @@ public class DataBase {
         preparedStatement2.close();
 
 
+    }
+
+    public ArrayList<String> getAllUsers (){
+        ArrayList<String> arrayList = new ArrayList<>();
+        try {
+            String query = "select USERNAME from MEMBER;";
+            preparedStatement = connection.prepareStatement(query);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                arrayList.add(resultSet.getString(1));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return arrayList;
     }
 }
